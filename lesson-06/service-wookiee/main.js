@@ -1,15 +1,25 @@
 const template = document.querySelector("#template").content;
 const boxes = document.querySelector("#boxes");
+const count = document.querySelector("#request-count");
+let counts = 0;
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+navigator.serviceWorker.addEventListener("message", (e) => {
+  console.log(e.data);
+  counter();
+});
 
+function counter() {
+  counts++;
+  count.innerHTML = counts;
+}
 for (const fileType of ["text/css", "text/html", "application/json"]) {
-  // Clone the template for each box
+  // Clone the template for each box 
   const box = template.cloneNode(true);
-
-  // Request fake.css, fake.html and fake.json, respectively
+  // Request fake.css, fake.html and fake.json, respectively 
   const fileName = "fake." + fileType.split("/")[1];
-
   box.querySelector("button").textContent = "Fetch " + fileName;
-
   // Send fetch request on button click
   box.querySelector("button").addEventListener("click", async (event) => {
     try {
@@ -18,21 +28,15 @@ for (const fileType of ["text/css", "text/html", "application/json"]) {
           Accept: fileType,
         },
       });
-
-      // Show response headers
+      // Show response headers 
       const headersList = event.target.parentNode.querySelector("dl");
       headersList.innerHTML = "";
       for (const [key, value] of response.headers.entries()) {
-        headersList.insertAdjacentHTML(
-          "beforeend",
-          `<dt class="capitalize font-bold">${key}:</dt><dd>${value}</dd>`
-        );
+        headersList.insertAdjacentHTML("beforeend", `<dt class="capitalize font-bold">${key}:</dt><dd>${value}</dd>`);
       }
-
       // Show response content
       const content = await response.text();
       event.target.parentNode.querySelector("textarea").value = content.trim();
-
       // Throw an error if the response is not "ok" (i.e. not 200-299 range)
       if (!response.ok) {
         throw new Error(response.status + " " + response.statusText);
